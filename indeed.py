@@ -51,3 +51,5 @@ def extract_indeed_jobs(last_page):
         company = cp_a.strip()
         print(company)
     return jobs
+
+    #test
