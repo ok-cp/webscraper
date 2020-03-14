@@ -20,36 +20,66 @@ def extract_indeed_pages():
     for link in links[:-1]:
         pages.append(int(link.string))
 
-    print(pages)
+    # print(pages)
     max_page = pages[-1]
-    print(max_page)
+    # print(max_page)
 
     # for n in range(max_page):
     #     print(f"start={n*50}")
 
     return max_page
 
+def extract_jobs(html):
+    title = html.find("div", {"class": "title"}).find("a")["title"]
+    company = html.find("span", {"class": "company"})
+    company_anchor = company.find("a")
+    # company_anchor = company.find("a")
+
+    if company_anchor is not None:
+        company = str(company_anchor.string)
+    else:
+        company = str(company_anchor)
+
+    company = company.strip()
+
+    job_id = html['data-jk']
+
+    # location = html.find("span",{"class": "location"}).string
+    location = html.find("div",{"class": "recJobLoc"})["data-rc-loc"]
+
+    return {
+            'title': title, 
+            'company': company, 
+            'location': location,
+            'link': f'https://www.indeed.com/jobs?q=python&limit=50&vjk={job_id}'
+            }
+    # print(company)
+
+
 
 def extract_indeed_jobs(last_page):
+
     jobs = []
-    # for page in range(last_page):
-        # print(f"&start={page*LIMIT}")
-    result = requests.get(f"{URL}&start={0*LIMIT}")    
-    soup =  BeautifulSoup(result.text, "html.parser")
-    results = soup.find_all("div", {"class": "jobsearch-SerpJobCard"})
 
-    for result in results:
-        title = result.find("div", {"class": "title"}).find("a")["title"]
-        company_anchor = result.find("span", {"class": "company"}).find("a")
-        # company_anchor = company.find("a")
+    for page in range(last_page):
 
-        if company_anchor is not None:
-            cp_a = str(company_anchor.string)
-        else:
-            cp_a = str(company_anchor)
+        print(f"Scrapping page{page}")
 
-        company = cp_a.strip()
-        print(company)
+        result = requests.get(f"{URL}&start={page*LIMIT}")    
+        soup =  BeautifulSoup(result.text, "html.parser")
+        results = soup.find_all("div", {"class": "jobsearch-SerpJobCard"})
+
+        for result in results:
+            job =  extract_jobs(result)
+            jobs.append(job)
+            # print(job)
+
     return jobs
 
-    #test
+    
+def  get_jobs():
+
+    last_page = extract_indeed_pages()
+    jobs = extract_indeed_jobs(last_page)
+
+    return  jobs
