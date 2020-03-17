@@ -53,7 +53,7 @@ def extract_jobs(html):
 def extract_indeed_jobs(last_page):
 
     jobs = []
-
+    print(f"Last Page is {last_page}")
     for page in range(last_page):
 
         print(f"Scrapping page{page}")

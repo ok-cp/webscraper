@@ -13,33 +13,38 @@ def get_last_page():
     return int(last_page)
 
 def extract_job(html):
-    print(html)
-    # title = html.find("div", {"class": "fs-body1"})
-    # print(title)
-    # company, location = html.find("div", {"class": "-company"}).find_all("span", recursive=False)
 
-    # company = company.get_text(strip=True)
-    # location = location.get_text(strip=True).strip("-").strip(" \r").strip(" \n")
+    title = html.find("div", {"class": "fl1"}).find("h2").find("a")["title"]
+    company, location = html.find("div", {"class": "fl1"}).find("h3").find_all("span", recursive=False)
 
-    # return {'title': title, 'company': company, 'location' : location}
+    company = company.get_text(strip=True)
+    location = location.get_text(strip=True).strip("-").strip(" \r").strip(" \n")
+    job_id = html['data-jobid']
+
+    return {'title': title, 'company': company, 'location' : location,
+            'apply_link' : f'https://stackoverflow.com/jobs/{job_id}'
+        }
 
 
 def extract_jobs(last_page):
+
     jobs = []
+    print(f"SOF Last Page is {last_page}")
+
     for page in range(last_page):
+
+        print(f"Scrapping SO: Page: {page}")
         result = requests.get(f"{URL}&pg={page+1}")
         soup = BeautifulSoup(result.text, "html.parser")
         results = soup.find_all("div", {"class": "-job"})
         for result in results:
             job = extract_job(result)
             jobs.append(job)
-        return jobs
+    return jobs
             
 
 def get_jobs():
     last_page = get_last_page()
     jobs = extract_jobs(last_page)
+    # print(jobs)
     return jobs
-
-
-get_jobs()
