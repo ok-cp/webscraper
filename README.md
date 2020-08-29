@@ -1,2 +1,4 @@
-# webscraper
-python webscraper
+# Indeed & stackoverflow WebScraper
+
+## Module
+BeautifulSoup
