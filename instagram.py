@@ -1,56 +1,36 @@
 import requests
 from bs4 import BeautifulSoup
+from urllib.request import urlopen
+from PIL import Image
+import re
+import os
+import urllib.request
+import random
 
-# Global variable
-# Set URL 
-LIMIT = 50
-URL = "https://www.instagram.com/jobs?q=python&limit={LIMIT}}"
+URL = "http://bastong.co.kr/"
+LIMIT = 2
 
-
-# Get Page Number in Navigator(html class)
-def extract_indeed_pages(): 
+def extract_pages():
 
     result = requests.get(URL)    
-    soup = BeautifulSoup(result.text, "html.parser")
-    pagination = soup.find("div", {"class": "pagination"})
-
-
+    html = urlopen(URL)
+    bs = BeautifulSoup(html, 'html.parser')
+    pagination = bs.find("div", {"class": "pagination"})
+    
     ## page numbers
     links = pagination.find_all("a")
     pages = []
-    for link in links[:-1]:
+    for link in links[1:-1]:
+    # for link in links:
+        print(link)
         pages.append(int(link.string))
 
     max_page = pages[-1]
-
+    print(f"MaxPage is {max_page}")
     return max_page
 
-# Get Job Info(title, company, location, link)
-def extract_jobs(html):
-    title = html.find("div", {"class": "title"}).find("a")["title"]
-    company = html.find("span", {"class": "company"})
-    company_anchor = company.find("a")
 
-    if company_anchor is not None:
-        company = str(company_anchor.string)
-    else:
-        company = str(company_anchor)
-
-    company = company.strip()
-
-    job_id = html['data-jk']
-    location = html.find("div",{"class": "recJobLoc"})["data-rc-loc"]
-
-    return {
-            'title': title, 
-            'company': company, 
-            'location': location,
-            'link': f'https://www.indeed.com/jobs?q=python&limit=50&vjk={job_id}'
-            }
-
-
-# Extract Job List
-def extract_indeed_jobs(last_page):
+def extract_images(last_page):
 
     jobs = []
     print(f"Last Page is {last_page}")
@@ -58,23 +38,22 @@ def extract_indeed_jobs(last_page):
 
         print(f"Scrapping page{page}")
 
-        result = requests.get(f"{URL}&start={page*LIMIT}")    
-        soup =  BeautifulSoup(result.text, "html.parser")
-        results = soup.find_all("div", {"class": "jobsearch-SerpJobCard"})
+        if page == 1:
+            html = urlopen(URL)
+        else:
 
-        for result in results:
-            job =  extract_jobs(result)
-            jobs.append(job)
+        bs = BeautifulSoup(html, 'html.parser')
+        content = bs.find("div", {"id": "content"}).find("div", {"class": "reviews_index__body"})
+        images = content.find_all('img', {'src':re.compile('.jpg')})
 
-    return jobs
+    for image in images: 
+        url = 'http:' + image['src'].replace('portrait_','')
+        urllib.request.urlretrieve(url, "test{}.jpg".format(random.randrange(1,10000)))
+
+# def  get_jobs_des():
+
+last_page = extract_pages()
+extract_images(last_page)
 
 
 
-
-# Get Job Descriptions    
-def  get_jobs_des():
-
-    last_page = extract_indeed_pages()
-    jobs = extract_indeed_jobs(2)
-    # jobs = extract_indeed_jobs(last_page)
-    return  jobs
